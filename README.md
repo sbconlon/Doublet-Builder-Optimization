@@ -97,6 +97,88 @@ if the inner/outer hit pairs form physically viable doublets. If an outer hit pa
      allowed change in the theta direction for doublets.
 This process is continued until all hits in the data set have been used as inner hits.
 
-### 3  Results
+## 3  Results
+
+  Four implementations of seeding algorithms were tested. Each implementation uses different
+data structures and python libraries but they follow the same outline covered in the previous
+section.
+
+### 3.1  Loop Method
+
+  This is the original method used in the D-Wave study. The Loop Method is written in standard
+python and does not use any external libraries. The method utilizes six loops to iterate over all
+possible inner/outer hit combinations. The benefit of this approach is that each loop allows the
+algorithm to iterate layer-wise, phi-wise, and hit-wise. This means that the function can filter
+layers and phi slices without ever looking at the hits inside these regions. This cuts down on the
+average number of calculations needed per outer hit.
+
+  The algorithm was tested in a virtual machine on a laptop using two Intel Core i7 processors.
+The algorithm was run on 20 samples from the simulated data set. Each sample contains an increasing 
+fraction of the hits expected in HL-LHC conditions starting from 5 percent of the HL-LHC data
+up to 100 percent, in 5 percent increments. A graph of the resulting runtimes are shown in Figure 6.
+
+  Then, the algorithm was tested on a CPU node with 64 threads on the NERSC Cori Haswell
+supercomputer. The algorithm was again run on twenty sample data set in 5 percent increments
+starting from 5 percent of the data up to 100 percent of the data set. A graph of the resulting
+runtimes is shown in Figure 7.
+
+### 3.2  GUvectorize Method
+
+  This method loads all the hits into a large two-dimensional Numpy array. The method also uses
+the Numba python library 6. The GUvectorize function decorator from the Numba library was
+used to convert the filter function from a standard python implementation into a Generalized Universal 
+Numpy function. Generalized Universal Numpy functions allow for fast computation across
+Numpy arrays. Furthermore, the jit function decorator was applied to the function responsible
+for calculating the region of interest as well as other auxiliary functions. Finally, the nopython
+flag was set to true for all functions implemented with Numba. This allows the functions to be
+compiled at runtime and run as fast as code written in C.
+
+  The same tests that were run on the loop method were run on the GUvectorize method and
+are shown in Figures 6 and 7.
+
+### 3.3 Parallel Method
+
+  This method uses the same basic data structure as the GUvectorize method. The goal of this
+method is to run the inner hit loop in parallel. This is done by using the jit decorator on the
+inner hit loop and setting the parallel key word argument to true. Numba does not support calls
+to universal Numpy functions inside jit functions, so jit was used to compile the filter function
+instead of GUvectorize.
+
+  The results are shown in Figures 6 and 7
+  
+### 3.4  Pandas Methods
+
+  This method is analogous to the Numpy method. However, this method replaces the twodimensional Numpy array 
+used in the Numpy method with a Pandas data frame. This algorithm performed worse than the Numpy method, taking 
+120 seconds to run on 5 percent of the dataset. This is due to the way in which Pandas handles filtering of data 
+frames. For each inner hit iteration, the data in the data frame is copied into a new data frame instance. 
+The data frame contains a large amount of data and the inner hit iteration is executed for each row in the frame, so
+the combined time to copy this data frame adds up to a substantial amount of runtime. A second
+Pandas method was tried in an attempt to reduce this filtering problem as well as incorporate the
+layer and phi-wise iteration advantage that the Loop method benefits from. This was done by
+binning the z-direction such that the data frame could be multi-indexed so that the layer bin, phi
+bin, and z bin were each their own dimension in the data frame. This allowed for index slicing
+rather than the boolean indexing that the other methods used. However, this method still suffered
+from slow downs, taking 90 seconds to run on 5 percent of the data set.
+
+## 4  Data Analysis and Discussion
+
+  On the complete data set, the parallel method ran about 4.68-times faster than the original
+loop method on a laptop and 24.56-times faster on Cori. The parallel method achieves the best
+performance by running the inner hit loop in parallel. The inner hit loop is a prime candidate
+for parallelization for two reasons. First, the computations per iteration are complex enough to
+outweigh the latency time associated with running in parallel so gains in efficiency are possible.
+Each iteration through the inner hit loop takes the laptop configuration roughly three milliseconds
+to complete, on average. Second, each inner hit iteration does not depend on the others. In other
+words, the doublets which are formed using one inner hit are not changed by the doublets that are
+formed using a different inner hit. This allows for the loop to be run non-sequentially and achieves
+significant speed ups.
+
+
+
+
+
+
+
 
 
