@@ -209,7 +209,7 @@ runtime of future annealing pattern recognition and machine learning studies app
 particle track reconstruction.
 
 
-# 6 Acknowledgements
+## 6 Acknowledgements
 
   Thanks to Paolo Calafiura for his mentorship and guidance throughout my research. Thanks
 to Rollin Thomas and Laurie Stephey for their programming support. This work was prepared
