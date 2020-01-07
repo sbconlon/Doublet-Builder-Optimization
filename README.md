@@ -161,7 +161,7 @@ bin, and z bin were each their own dimension in the data frame. This allowed for
 rather than the boolean indexing that the other methods used. However, this method still suffered
 from slow downs, taking 90 seconds to run on 5 percent of the data set.
 
-## 4  Data Analysis and Discussion
+## 4  Data Analysis
 
   On the complete data set, the parallel method ran about 4.68-times faster than the original
 loop method on a laptop and 24.56-times faster on Cori. The parallel method achieves the best
@@ -174,6 +174,47 @@ words, the doublets which are formed using one inner hit are not changed by the 
 formed using a different inner hit. This allows for the loop to be run non-sequentially and achieves
 significant speed ups.
 
+  There is only a minimal difference in runtimes between the GUvectorize method and the
+parallel method when run on the laptop. This is because only two cores are being accessed by the
+virtual machine which limits the efficiency of parallelization. The speed ups that are being seen
+when the two algorithms are run on the laptop are most likely the result of the compilation of the
+code at runtime. And, the slight edge the parallel method gains over the GUvectorize method on
+the laptop is likely the result of the extra core being used.
+
+  The real difference between the two algorithm designs can be seen when they are run on
+Cori. On this hardware configuration, the parallel method has access to 64 hardware threads
+which maximizes the algorithm’s capabilities. Here, the parallel method out performs the GUvectorize 
+method by a significant margin even though both algorithms benefit from being compiled
+at runtime. This suggests the bulk of the parallel method’s speed up derives from exploiting the
+additional threads.
+
+  Finally, the loop method is the slowest of the three seeding methods because it is not compiled
+at runtime and does not run in parallel. The method is limited because its large nested loop
+structure can not be run non-sequentially. The outcome of one loop is dependent on the other.
+This limits the algorithm to running its processes serially and does not take full advantage of the
+hardware configuration it is being run on.
+
+
+## 5 Conclusion
+
+  The objective of the research was to improve the design of the seeding algorithm for annealing
+pattern recognition applied to charged particle track reconstruction. The python libraries Numpy
+and Numba were used to compile the code at runtime and run the computationally expensive loops
+in parallel. Four algorithm methods were developed and tested on a standard laptop configuration
+and on a supercomputing cluster. It was shown that the parallel seeding algorithm ran 4-times
+faster than the old seeding algorithm on the laptop configuration and 24-times faster on the super
+computing cluster. The future of the research will include modifying the parallel method with
+CuPy so that it can be tested on an NVIDIA GPU. The results of this study will improve the
+runtime of future annealing pattern recognition and machine learning studies applied to charged
+particle track reconstruction.
+
+
+# 6 Acknowledgements
+
+  Thanks to Paolo Calafiura for his mentorship and guidance throughout my research. Thanks
+to Rollin Thomas and Laurie Stephey for their programming support. This work was prepared
+in partial fulfillment of the requirements of the Berkeley Lab Undergraduate Research (BLUR)
+Program, managed by Workforce Development and Education at Berkeley Lab.
 
 
 
